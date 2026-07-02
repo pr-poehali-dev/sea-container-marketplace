@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,17 +70,116 @@ const STEPS = [
   { icon: 'Truck', title: 'Получите', desc: 'Доставка до вашего адреса' },
 ];
 
+const PROMO_SLIDES = [
+  {
+    tag: 'Акция',
+    title: 'Скидка 15%',
+    sub: 'на 40FT High Cube',
+    desc: 'При покупке от 5 контейнеров',
+    badge: '-15%',
+    from: 'from-violet-600',
+    to: 'to-fuchsia-500',
+    icon: 'Container',
+  },
+  {
+    tag: 'Горячее предложение',
+    title: 'Рефрижераторы',
+    sub: 'со склада Новороссийск',
+    desc: 'Готовы к отгрузке, документы включены',
+    badge: 'HOT',
+    from: 'from-fuchsia-600',
+    to: 'to-pink-500',
+    icon: 'Snowflake',
+  },
+  {
+    tag: 'Спец условия',
+    title: 'Лизинг 0%',
+    sub: 'на 12 месяцев',
+    desc: 'Для юридических лиц и ИП',
+    badge: '0%',
+    from: 'from-purple-700',
+    to: 'to-violet-500',
+    icon: 'Landmark',
+  },
+  {
+    tag: 'Партнёрам',
+    title: 'Оптовые цены',
+    sub: 'от 10 единиц',
+    desc: 'Персональный менеджер и скидка до 20%',
+    badge: '-20%',
+    from: 'from-indigo-600',
+    to: 'to-purple-500',
+    icon: 'HandCoins',
+  },
+];
+
+const NOVELTY = [
+  { title: '20FT Dry 2025', cond: 'Новый', price: '178 000 ₽', oldPrice: '195 000 ₽', city: 'Москва', seller: 'PortLine', rating: 4.9, icon: 'Box', tag: '20FT' },
+  { title: '40FT HC 2025', cond: 'Новый', price: '312 000 ₽', oldPrice: null, city: 'СПб', seller: 'SeaTrade', rating: 5.0, icon: 'Container', tag: '40FT HC' },
+  { title: 'Reefer 40 2025', cond: 'Новый', price: '740 000 ₽', oldPrice: '790 000 ₽', city: 'Владивосток', seller: 'ColdCargo', rating: 4.8, icon: 'Snowflake', tag: 'Reefer' },
+  { title: '45FT Pallet Wide', cond: 'Новый', price: '355 000 ₽', oldPrice: null, city: 'Новороссийск', seller: 'BalticBox', rating: 4.9, icon: 'Container', tag: '45FT' },
+  { title: 'Open Top 20 2025', cond: 'Новый', price: '215 000 ₽', oldPrice: '230 000 ₽', city: 'Екатеринбург', seller: 'UralCont', rating: 4.7, icon: 'PackageOpen', tag: 'Open Top' },
+];
+
+const HITS = [
+  { title: '20FT Dry Б/У «A»', cond: 'Б/У · A', price: '142 000 ₽', city: 'Москва', seller: 'МегаКонт', sales: 218, rating: 4.9, icon: 'Box', tag: '20FT' },
+  { title: '40FT High Cube', cond: 'Б/У · A', price: '265 000 ₽', city: 'СПб', seller: 'СевZапад', sales: 187, rating: 4.8, icon: 'Container', tag: '40FT HC' },
+  { title: 'Reefer 40FT', cond: 'Новый', price: '695 000 ₽', city: 'Новороссийск', seller: 'ЮгТранс', sales: 143, rating: 5.0, icon: 'Snowflake', tag: 'Reefer' },
+  { title: '20FT Dry Стандарт', cond: 'Б/У · B', price: '125 000 ₽', city: 'Казань', seller: 'ВолгаКонт', sales: 132, rating: 4.7, icon: 'Box', tag: '20FT' },
+];
+
+const TABS_DATA = {
+  '20FT': [
+    { title: '20FT Dry «A»', price: '142 000 ₽', old: '160 000 ₽', city: 'Москва', cond: 'Б/У · A' },
+    { title: '20FT Dry Новый', price: '178 000 ₽', old: null, city: 'СПб', cond: 'Новый' },
+    { title: '20FT Open Top', price: '215 000 ₽', old: '230 000 ₽', city: 'Казань', cond: 'Б/У · A' },
+    { title: '20FT Flat Rack', price: '188 000 ₽', old: null, city: 'Екб', cond: 'Новый' },
+  ],
+  '40FT': [
+    { title: '40FT High Cube', price: '265 000 ₽', old: '295 000 ₽', city: 'Москва', cond: 'Б/У · A' },
+    { title: '40FT Dry Новый', price: '312 000 ₽', old: null, city: 'Новороссийск', cond: 'Новый' },
+    { title: '40FT Pallet Wide', price: '355 000 ₽', old: '380 000 ₽', city: 'СПб', cond: 'Б/У · A' },
+    { title: '40FT Open Top', price: '290 000 ₽', old: null, city: 'Владивосток', cond: 'Новый' },
+  ],
+  'Скидки': [
+    { title: '40FT HC -15%', price: '265 000 ₽', old: '312 000 ₽', city: 'Москва', cond: 'Новый' },
+    { title: 'Reefer -10%', price: '621 000 ₽', old: '690 000 ₽', city: 'СПб', cond: 'Новый' },
+    { title: '20FT Dry -12%', price: '125 000 ₽', old: '142 000 ₽', city: 'Казань', cond: 'Б/У · A' },
+    { title: '45FT -8%', price: '313 000 ₽', old: '340 000 ₽', city: 'Екб', cond: 'Новый' },
+  ],
+  'Новости': [
+    { title: 'Новый терминал Владивосток', price: null, old: null, city: '20 июня 2026', cond: 'Новости', isNews: true },
+    { title: 'Лизинг 0% на 12 месяцев', price: null, old: null, city: '12 июня 2026', cond: 'Акция', isNews: true },
+    { title: 'Скидки до 20% оптом', price: null, old: null, city: '05 июня 2026', cond: 'Акция', isNews: true },
+    { title: 'Reefer теперь с доставкой', price: null, old: null, city: '28 мая 2026', cond: 'Сервис', isNews: true },
+  ],
+  'Спец условия': [
+    { title: 'Лизинг от 0%', price: 'от 25 000 ₽/мес', old: null, city: 'По всей РФ', cond: 'ИП / ООО' },
+    { title: 'Рассрочка 12 мес', price: 'без % и доп.условий', old: null, city: 'По всей РФ', cond: 'Физ. лица' },
+    { title: 'Оптовая скидка', price: 'до -20%', old: null, city: 'от 10 единиц', cond: 'Оптом' },
+    { title: 'Факторинг', price: 'отсрочка 90 дней', old: null, city: 'Юр. лица', cond: 'Бизнес' },
+  ],
+} as Record<string, { title: string; price: string | null; old: string | null; city: string; cond: string; isNews?: boolean }[]>;
+
 export default function Index() {
   const { theme, toggle } = useTheme();
   const { user, login, logout } = useAuth();
   const { toast } = useToast();
   const [authOpen, setAuthOpen] = useState(false);
   const [cabinetOpen, setCabinetOpen] = useState(false);
+  const [promoIdx, setPromoIdx] = useState(0);
+  const [activeTab, setActiveTab] = useState('20FT');
+  const noveltyRef = useRef<HTMLDivElement>(null);
+  const hitsRef = useRef<HTMLDivElement>(null);
 
   const openCabinet = () => (user ? setCabinetOpen(true) : setAuthOpen(true));
 
   const notify = (title: string) =>
     toast({ title, description: 'Раздел в разработке — скоро здесь появится контент.' });
+
+  const scrollRow = (ref: React.RefObject<HTMLDivElement>, dir: number) => {
+    ref.current?.scrollBy({ left: dir * 320, behavior: 'smooth' });
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
@@ -173,6 +272,204 @@ export default function Index() {
                   <div className="font-display text-4xl font-bold text-gradient">{v}</div>
                   <div className="text-sm text-muted-foreground">{l}</div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== PROMO SLIDER ===== */}
+        <section className="py-12">
+          <div className="container">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <span className="text-sm font-semibold uppercase tracking-widest text-primary">Акции и скидки</span>
+                <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-gradient">Горячие предложения</h2>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setPromoIdx(i => Math.max(0, i - 1))} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border transition-colors hover:border-primary hover:text-primary disabled:opacity-30" disabled={promoIdx === 0}>
+                  <Icon name="ChevronLeft" size={20} />
+                </button>
+                <button onClick={() => setPromoIdx(i => Math.min(PROMO_SLIDES.length - 1, i + 1))} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border transition-colors hover:border-primary hover:text-primary disabled:opacity-30" disabled={promoIdx === PROMO_SLIDES.length - 1}>
+                  <Icon name="ChevronRight" size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* desktop 4 cols, tablet 2, mobile 1 — slide offset */}
+            <div className="overflow-hidden">
+              <div
+                className="flex gap-4 transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(calc(-${promoIdx} * (100% / 4 + 4px)))` }}
+              >
+                {PROMO_SLIDES.map((s, i) => (
+                  <div key={i} className="relative min-w-[calc(50%-8px)] shrink-0 overflow-hidden rounded-3xl lg:min-w-[calc(25%-12px)]">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${s.from} ${s.to} opacity-90`} />
+                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(255,255,255,.3) 12px,rgba(255,255,255,.3) 13px)' }} />
+                    <div className="relative p-6">
+                      <div className="mb-3 flex items-start justify-between">
+                        <Badge className="rounded-full bg-white/20 text-white hover:bg-white/20">{s.tag}</Badge>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white">
+                          <Icon name={s.icon} size={22} />
+                        </div>
+                      </div>
+                      <div className="mt-2 font-display text-4xl font-bold text-white">{s.badge}</div>
+                      <div className="mt-1 font-display text-xl font-bold text-white">{s.title}</div>
+                      <div className="text-white/80">{s.sub}</div>
+                      <div className="mt-3 text-sm text-white/70">{s.desc}</div>
+                      <button onClick={() => notify(s.title)} className="mt-4 flex items-center gap-1.5 rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/30">
+                        Подробнее <Icon name="ArrowRight" size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* dots */}
+            <div className="mt-4 flex justify-center gap-2">
+              {PROMO_SLIDES.map((_, i) => (
+                <button key={i} onClick={() => setPromoIdx(i)} className={`h-2 rounded-full transition-all ${i === promoIdx ? 'w-6 bg-primary' : 'w-2 bg-border'}`} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== NOVELTY ===== */}
+        <section className="py-10">
+          <div className="container">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <span className="text-sm font-semibold uppercase tracking-widest text-primary">Свежие поступления</span>
+                <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-gradient">Новинки контейнеров</h2>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => scrollRow(noveltyRef, -1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:border-primary hover:text-primary"><Icon name="ChevronLeft" size={20} /></button>
+                <button onClick={() => scrollRow(noveltyRef, 1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:border-primary hover:text-primary"><Icon name="ChevronRight" size={20} /></button>
+              </div>
+            </div>
+            <div ref={noveltyRef} className="flex gap-4 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+              {NOVELTY.map((c, i) => (
+                <button key={i} onClick={() => notify(c.title)}
+                  className="group glass min-w-[240px] shrink-0 rounded-3xl p-5 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 text-primary transition-transform group-hover:scale-110">
+                      <Icon name={c.icon} size={26} />
+                    </div>
+                    <Badge className="rounded-full bg-green-500/15 text-green-600 hover:bg-green-500/15 dark:text-green-400">NEW</Badge>
+                  </div>
+                  <h3 className="mt-3 font-display text-base font-bold">{c.title}</h3>
+                  <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Icon name="MapPin" size={12} /> {c.city} · {c.cond}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1">
+                    {[1,2,3,4,5].map(s => <Icon key={s} name="Star" size={12} className={s <= Math.round(c.rating) ? 'text-yellow-400' : 'text-border'} />)}
+                    <span className="ml-1 text-xs text-muted-foreground">{c.rating}</span>
+                  </div>
+                  <div className="mt-3">
+                    <div className="font-display text-lg font-bold text-primary">{c.price}</div>
+                    {c.oldPrice && <div className="text-xs text-muted-foreground line-through">{c.oldPrice}</div>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== HITS ===== */}
+        <section className="py-10">
+          <div className="container">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <span className="text-sm font-semibold uppercase tracking-widest text-primary">Лучшие продавцы</span>
+                <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-gradient">Хиты продаж</h2>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => scrollRow(hitsRef, -1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:border-primary hover:text-primary"><Icon name="ChevronLeft" size={20} /></button>
+                <button onClick={() => scrollRow(hitsRef, 1)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:border-primary hover:text-primary"><Icon name="ChevronRight" size={20} /></button>
+              </div>
+            </div>
+            <div ref={hitsRef} className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+              {HITS.map((c, i) => (
+                <button key={i} onClick={() => notify(c.title)}
+                  className="group glass min-w-[260px] shrink-0 rounded-3xl p-5 text-left transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 text-primary transition-transform group-hover:scale-110">
+                      <Icon name={c.icon} size={26} />
+                    </div>
+                    <div className="flex items-center gap-1 rounded-xl bg-orange-500/15 px-2.5 py-1 text-xs font-bold text-orange-500">
+                      <Icon name="Flame" size={13} /> {c.sales} продаж
+                    </div>
+                  </div>
+                  <h3 className="mt-3 font-display text-base font-bold">{c.title}</h3>
+                  <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Icon name="Store" size={12} /> {c.seller} · <Icon name="MapPin" size={12} /> {c.city}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1">
+                    {[1,2,3,4,5].map(s => <Icon key={s} name="Star" size={12} className={s <= Math.round(c.rating) ? 'text-yellow-400' : 'text-border'} />)}
+                    <span className="ml-1 text-xs text-muted-foreground">{c.rating}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="font-display text-lg font-bold text-primary">{c.price}</div>
+                    <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">{c.tag}</Badge>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== TABS BLOCK ===== */}
+        <section className="py-10">
+          <div className="container">
+            <div className="mb-6">
+              <span className="text-sm font-semibold uppercase tracking-widest text-primary">Блок товаров</span>
+              <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-gradient">Выбирайте по категории</h2>
+            </div>
+            {/* tabs */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              {Object.keys(TABS_DATA).map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  className={`rounded-xl border px-5 py-2 font-display text-sm font-semibold uppercase tracking-wide transition-all ${activeTab === tab ? 'border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {TABS_DATA[activeTab].map((item, i) => (
+                <button key={i} onClick={() => notify(item.title)}
+                  className="group glass rounded-2xl p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
+                  style={{ animation: `fade-up 0.35s ${i * 0.05}s both` }}
+                >
+                  {item.isNews ? (
+                    <>
+                      <Badge className="mb-3 rounded-full bg-primary/10 text-primary hover:bg-primary/10">{item.cond}</Badge>
+                      <h3 className="font-display text-base font-bold leading-snug">{item.title}</h3>
+                      <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Icon name="Calendar" size={13} /> {item.city}
+                      </div>
+                      <div className="mt-3 flex items-center gap-1 text-sm font-semibold text-primary">
+                        Читать <Icon name="ArrowRight" size={14} className="transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <Badge className="rounded-full bg-muted text-muted-foreground hover:bg-muted">{item.cond}</Badge>
+                        {item.old && <span className="text-xs text-green-500 font-semibold">Скидка</span>}
+                      </div>
+                      <h3 className="mt-3 font-display text-base font-bold">{item.title}</h3>
+                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Icon name="MapPin" size={12} /> {item.city}
+                      </div>
+                      <div className="mt-3">
+                        <div className="font-display text-lg font-bold text-primary">{item.price}</div>
+                        {item.old && <div className="text-xs text-muted-foreground line-through">{item.old}</div>}
+                      </div>
+                    </>
+                  )}
+                </button>
               ))}
             </div>
           </div>
